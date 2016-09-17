@@ -118,17 +118,6 @@ var playButtonTemplate = '<a class="album-song-button"><span class="ion-play"></
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 /*
 var albumPicasso = {
     title: 'The Colors',
