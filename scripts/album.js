@@ -96,7 +96,7 @@ var findParentByClassName = function(element, targetClass) {
             if(currentParent.className !== null){
                 currentParent = currentParent.parentElement;
             }
-            else if(currentParent == null && currentParent.className !== targetClass){
+            else if(currentParent != null && currentParent.className != targetClass){
                 alert("Parent's name does not match")
             }
             else if(currentParent == null){
@@ -151,6 +151,8 @@ var playButtonTemplate = '<a class="album-song-button"><span class="ion-play"></
 var pauseButtonTemplate = '<a class="album-song-button"><span class="ion-pause"></span></a>';
 
 var currentlyPlayingSong = null;
+
+var currentlyPlayingSong;
  
  window.onload = function() {
      setCurrentAlbum(albumPicasso);
