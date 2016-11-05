@@ -27,7 +27,7 @@ var createSongRow = function(songNumber, songName, songLength) {
         '<tr class="album-view-song-item">'
       + '  <td class="song-item-number" data-song-number="' + songNumber + '">' + songNumber + '</td>'
       + '  <td class="song-item-title">' + songName + '</td>'
-      + '  <td class="song-item-duration">' + songLength + '</td>'
+      + '  <td class="song-item-duration">' + filterTimeCode(songLength) + '</td>'
       + '</tr>'
       ;
     
@@ -42,6 +42,7 @@ var createSongRow = function(songNumber, songName, songLength) {
         if (currentlyPlayingSongNumber !== songNumber) {
             setSong(songNumber);
             currentSoundFile.play();
+            updateSeekBarWhileSongPlays(); //just added too
             currentSongFromAlbum = currentAlbum.songs[songNumber - 1];
             
             // stuff just added
@@ -58,6 +59,7 @@ var createSongRow = function(songNumber, songName, songLength) {
                 $(this).html(pauseButtonTemplate);
                 $('.main-controls .play-pause').html(playerBarPauseButton);
                 currentSoundFile.play();
+                updateSeekBarWhileSongPlays() //just added too
             }
             else{
                 $(this).html(playButtonTemplate);
@@ -114,12 +116,16 @@ var trackIndex = function(album, song){
     return album.songs.indexOf(song);
 };
 
-var updateSeekBarWhileSongsPlays = function(){
+var updateSeekBarWhileSongPlays = function(){
     if(currentSoundFile){
         currentSoundFile.bind('timeupdate', function(event){
             
             var seekBarFillRatio = this.getTime() / this.getDuration();
             var $seekBar = $('.seek-control .seek-bar');
+            
+            //time in bar update
+            setCurrentTimeInPlayerBar();
+            setTotalTimeInPlayerBar();
             
             updateSeekPercentage($seekBar, seekBarFillRatio);
         });
@@ -132,6 +138,65 @@ var seek = function(time){
     }
 }
 
+// Assignment 21
+// Show to Jason
+var setCurrentTimeInPlayerBar = function(currentTime){
+    var result;
+    currentTime = currentSoundFile.getTime();
+    result = filterTimeCode(currentTime);
+    $('.current-time').text(result);
+};
+
+var setTotalTimeInPlayerBar = function(totalTime){
+    var result;
+    totalTime = currentSoundFile.getDuration();
+    result = filterTimeCode(totalTime);
+    $('.total-time').text(result);
+};
+
+/* Old version
+var setCurrentTimeInPlayerBar = function(currentTime){
+    $('.current-time').text(currentTime);
+    filterTimeCode(currentTime);
+};
+
+var setTotalTimeInPlayerBar = function(totalTime){
+    $('.total-time').text(totalTime);
+    filterTimeCode(totalTime);
+};
+*/
+
+// http://stackoverflow.com/questions/3733227/javascript-seconds-to-minutes-and-seconds
+/*
+var filterTimeCode = function(timeInSeconds){
+    timeInSeconds = parseFloat(timeInSeconds);
+    var wholeMinutes = Math.floor(timeInSeconds / 60);
+    var wholeSeconds = timeInSeconds - wholeMinutes * 60;
+    
+    if(wholeSeconds < 10){
+        wholeSeconds = "0" + wholeSeconds;
+    }
+    
+    return Math.floor(wholeMinutes) + ":" + x + Math.round(wholeSeconds);
+};
+*/
+
+var filterTimeCode = function(timeInSeconds){
+    timeInSeconds = parseFloat(timeInSeconds);
+    var wholeMinutes = Math.floor(timeInSeconds / 60);
+    var wholeSeconds = timeInSeconds - wholeMinutes * 60;
+    
+    //padding for the zero's in the minutes
+    var x = null;
+    if(wholeSeconds < 10){
+        x = 0;
+    }else{
+        x = '';
+    }
+    
+    return Math.floor(wholeMinutes) + ":" + x + Math.floor(wholeSeconds);
+};
+
 var updateSeekPercentage = function($seekBar, seekBarFillRatio){
     var offsetXPercent = seekBarFillRatio * 100;
     
@@ -142,8 +207,6 @@ var updateSeekPercentage = function($seekBar, seekBarFillRatio){
     $seekBar.find('.fill').width(percentageString);
     $seekBar.find('.thumb').css({left: percentageString});
 };
-
-//Set up seek bars here
 
 var setupSeekBars = function(){
     var $seekBars = $('.player-bar .seek-bar');
@@ -178,6 +241,11 @@ var setupSeekBars = function(){
             }
             
             updateSeekPercentage($seekBar, seekBarFillRatio);
+        });
+        
+        $(document).bind('mouseup.thumb', function(event){
+            $(document).unbind('mousemove.thumb');
+            $(document).unbind('mouseup.thumb');
         });
     });
 };
@@ -214,7 +282,7 @@ var setupSeekBars = function() {
 };
 */
 
-//Assignment 20 Prototype
+//Assignment 20 Solution
 var playPauseToggle = function(){
     var songStatus = currentSoundFile;
     if(songStatus){
@@ -243,9 +311,10 @@ var previousSong = function() {
     }
     
     //currentlyPlayingSongNumber = currentSongIndex + 1;
-    setSong(currentSongIndex + 1); //just added
+    setSong(currentSongIndex + 1); //not
     currentSoundFile.play();
-    updatePlayerBarSong(); //just added
+    updateSeekBarWhileSongPlays();
+    updatePlayerBarSong(); //not
     //currentSongFromAlbum = currentAlbum.songs[currentSongIndex];
 
     $('.currently-playing .song-name').text(currentSongFromAlbum.title);
@@ -274,9 +343,10 @@ var nextSong = function() {
     }
     
     //currentlyPlayingSongNumber = currentSongIndex + 1;
-    setSong(currentSongIndex + 1); //just added
+    setSong(currentSongIndex + 1); //not
     currentSoundFile.play();
-    updatePlayerBarSong(); //just added
+    updateSeekBarWhileSongPlays(); //just added
+    updatePlayerBarSong(); //not
     //currentSongFromAlbum = currentAlbum.songs[currentSongIndex];
 
     $('.currently-playing .song-name').text(currentSongFromAlbum.title);
@@ -323,13 +393,3 @@ $(document).ready(function(){
     $nextButton.click(nextSong);
     $togglePlayFromPlayerBar.click(playPauseToggle);
 });
-
-/*
-
-- know if a song is playing
-- if playing show pause button
-- if song is not playing show play button
-- make a var for what song is playing
-- make a var for if nothing is playing
-
-*/
